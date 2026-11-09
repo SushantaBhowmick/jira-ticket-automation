@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { ConfirmDialog } from "@/components/dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { StoredAccount } from "@/lib/browser-account";
 import type { ExecuteResponse, InspectResponse } from "@/types/api";
 
@@ -266,34 +267,30 @@ export function TicketConsole({
               />
             </label>
             {ticket ? (
-              <div className="rounded-xl border border-[#cfe3df] bg-[#f3faf8] p-4 sm:col-span-2">
-                <p className="font-mono text-xs text-[#0f5f5a]">{ticket.ticketKey}</p>
-                <p className="mt-1 text-sm font-medium">{ticket.summary}</p>
+              <div className="rounded-2xl border border-[#cfe3df] bg-[#f4faf8] p-4 sm:col-span-2">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-mono text-xs font-semibold text-[#0f5f5a]">{ticket.ticketKey}</p>
+                    <p className="mt-1 text-sm font-medium">{ticket.summary}</p>
+                  </div>
+                  <p className="rounded-full bg-white px-2.5 py-1 text-xs text-[#0f5f5a]">{ticket.currentStatus}</p>
+                </div>
                 <p className="mt-2 text-sm text-[#5c5348]">
-                  {ticket.issueType} · {ticket.currentStatus}
+                  {ticket.issueType}
                   {ticket.statusInWorkflow
                     ? ` · ${ticket.workflowLabel} · step ${(ticket.workflowIndex ?? 0) + 1} of ${ticket.workflowStatuses.length}`
                     : " · this status is not in a configured workflow"}
                 </p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <Metric label="Estimate" value={showTime(ticket.originalEstimate)} />
+                  <Metric label="Logged" value={showTime(ticket.timeSpent)} />
+                  <Metric label="Remaining" value={showTime(ticket.remainingEstimate)} />
+                </div>
                 {ticket.nextStatuses.length > 0 ? (
-                  <p className="mt-2 text-sm">
-                    Next configured statuses: {ticket.nextStatuses.join(", ")}.
-                  </p>
+                  <p className="mt-3 text-sm">Next: {ticket.nextStatuses[0]}.</p>
                 ) : ticket.statusInWorkflow ? (
-                  <p className="mt-2 text-sm">This ticket is already at the last configured status.</p>
+                  <p className="mt-3 text-sm">This ticket is already at the last configured status.</p>
                 ) : null}
-                <p className="mt-3 text-sm font-bold">
-                  Estimate {showTime(ticket.originalEstimate)} · Logged {showTime(ticket.timeSpent)} · Remaining{" "}
-                  {showTime(ticket.remainingEstimate)}
-                </p>
-                {ticket.transitions.length > 0 ? (
-                  <p className="mt-2 text-sm">
-                    Jira can move this to{" "}
-                    {ticket.transitions.map((transition) => transition.toStatus).join(", ")}.
-                  </p>
-                ) : (
-                  <p className="mt-2 text-sm">Jira did not return a transition from this status.</p>
-                )}
               </div>
             ) : null}
             <label className="block">
@@ -306,21 +303,28 @@ export function TicketConsole({
                 disabled={!ticket}
                 className={inputClass}
               />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {["1", "2", "4", "8"].map((choice) => (
+                  <button
+                    key={choice}
+                    type="button"
+                    disabled={!ticket}
+                    onClick={() => setHours(choice)}
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${hours === choice ? "bg-[#0f5f5a] text-white" : "bg-white text-[#5c5348] ring-1 ring-[#e4d9c8]"}`}
+                  >
+                    {choice}h
+                  </button>
+                ))}
+              </div>
               {ticket ? (
                 <p className="mt-2 text-xs leading-5 text-[#5c5348]">
-                  Already logged {showTime(ticket.timeSpent)}. Estimate is {showTime(ticket.originalEstimate)}. Logged hours are subtracted from the remaining estimate.
+                  Already logged {showTime(ticket.timeSpent)}. Logged hours are subtracted from the remaining estimate.
                 </p>
               ) : null}
             </label>
             <label className="block">
               <FieldLabel>Work date</FieldLabel>
-              <input
-                type="date"
-                value={workDate}
-                onChange={(event) => setWorkDate(event.target.value)}
-                disabled={!ticket}
-                className={inputClass}
-              />
+              <DatePicker value={workDate} onChange={setWorkDate} disabled={!ticket} />
             </label>
             <label className="block sm:col-span-2">
               <FieldLabel>Worklog comment</FieldLabel>
@@ -423,9 +427,11 @@ export function TicketConsole({
                 return (
                   <li
                     key={status}
-                    className={`flex gap-3 text-sm ${current ? "font-semibold text-[#0f5f5a]" : passed ? "text-[#8a7d6b]" : ""}`}
+                    className={`flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm ${current ? "bg-[#e7f3f1] font-semibold text-[#0f5f5a]" : passed ? "text-[#8a7d6b]" : ""}`}
                   >
-                    <span className="mt-0.5 font-mono text-xs text-[#8a7d6b]">{index + 1}</span>
+                    <span className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] ${current ? "bg-[#0f5f5a] text-white" : "bg-[#f3efe6] text-[#8a7d6b]"}`}>
+                      {index + 1}
+                    </span>
                     <span>{status}</span>
                   </li>
                 );
@@ -710,6 +716,15 @@ function Info({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-xs tracking-wide text-[#8a7d6b] uppercase">{label}</dt>
       <dd className="mt-1 text-sm font-medium">{value}</dd>
+    </div>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-white px-2 py-2">
+      <p className="text-[10px] tracking-wide text-[#8a7d6b] uppercase">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
     </div>
   );
 }
