@@ -1,12 +1,13 @@
 {
-  "name": "web-scaffold",
+  "name": "jira-ticket-automation",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
     "next": "16.4.5",
@@ -15,7 +16,8 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
+    "vitest": "^4.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
