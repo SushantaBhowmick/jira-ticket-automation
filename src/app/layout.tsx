@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pactap Jira automation",
+  title: "Pactap Jira automation - by Sushanta Bhowmick",
   description: "Move a normal Jira ticket through its workflow and log work.",
 };
 
